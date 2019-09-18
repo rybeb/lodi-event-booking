@@ -1,9 +1,12 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useContext } from 'react';
 
+import { AuthContext } from '../context/auth-context';
 import './Auth.css';
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
+
+  const context = useContext(AuthContext);
 
   const emailEl = useRef(null);
   const passwordEl = useRef(null);
@@ -60,7 +63,13 @@ const AuthPage = () => {
         return res.json();
       })
       .then(resData => {
-        console.log(resData);
+        if (resData.data.login.token) {
+          context.login(
+            resData.data.login.token,
+            resData.data.login.userId,
+            resData.data.login.tokenExpiration
+          );
+        }
       })
       .catch(err => {
         console.log(err);
