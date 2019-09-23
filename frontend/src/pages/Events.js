@@ -13,6 +13,8 @@ const EventsPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
 
+  const isActive = useRef(true);
+
   const context = useContext(AuthContext);
 
   const titleElRef = useRef(null);
@@ -20,9 +22,9 @@ const EventsPage = () => {
   const dateElRef = useRef(null);
   const descriptionElRef = useRef(null);
 
-  useEffect(() => {
-    fetchEvents();
-  }, []);
+  // useEffect(() => {
+  //   fetchEvents();
+  // }, []);
 
   const startCreateEventHandler = () => {
     setCreating(true);
@@ -61,14 +63,12 @@ const EventsPage = () => {
         `
     };
 
-    const token = context.token;
-
     fetch('http://localhost:5000/graphql', {
       method: 'POST',
       body: JSON.stringify(requestBody),
       headers: {
         'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + token
+        Authorization: 'Bearer ' + context.token
       }
     })
       .then(res => {
@@ -104,6 +104,7 @@ const EventsPage = () => {
   };
 
   const fetchEvents = () => {
+    setIsLoading(true);
     const requestBody = {
       query: `
           query {
@@ -142,7 +143,9 @@ const EventsPage = () => {
       })
       .catch(err => {
         console.log(err);
-        setIsLoading(false);
+        if (isActive) {
+          setIsLoading(false);
+        }
       });
   };
 
@@ -151,7 +154,53 @@ const EventsPage = () => {
     setSelectedEvent(selectedEvent);
   };
 
-  const bookEventHandler = () => {};
+  const bookEventHandler = () => {
+    if (!context.token) {
+      setSelectedEvent(null);
+      return;
+    }
+    const requestBody = {
+      query: `
+          mutation {
+            bookEvent(eventId: "${selectedEvent._id}") {
+              _id
+             createdAt
+             updatedAt
+            }
+          }
+        `
+    };
+
+    fetch('http://localhost:5000/graphql', {
+      method: 'POST',
+      body: JSON.stringify(requestBody),
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + context.token
+      }
+    })
+      .then(res => {
+        if (res.status !== 200 && res.status !== 201) {
+          throw new Error('Failed!');
+        }
+        return res.json();
+      })
+      .then(resData => {
+        console.log(resData);
+        setSelectedEvent(null);
+      })
+      .catch(err => {
+        console.log(err);
+      });
+  };
+
+  useEffect(() => {
+    fetchEvents();
+    isActive.current = true;
+    return () => {
+      isActive.current = false;
+    };
+  }, []);
 
   return (
     <>
@@ -192,7 +241,7 @@ const EventsPage = () => {
           canConfirm
           onCancel={modalCancelHandler}
           onConfirm={bookEventHandler}
-          confirmText='Book'
+          confirmText={context.token ? 'Book' : 'Confirm'}
         >
           <h1>{selectedEvent.title}</h1>
           <h2>
