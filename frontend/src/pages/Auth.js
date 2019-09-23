@@ -26,25 +26,25 @@ const AuthPage = () => {
 
     let requestBody = {
       query: `
-      query {
-        login(email: "${email}",password: "${password}"){
-          userId
-          token
-          tokenExpiration
+        query {
+          login(email: "${email}", password: "${password}") {
+            userId
+            token
+            tokenExpiration
+          }
         }
-      }
       `
     };
 
     if (!isLogin) {
       requestBody = {
         query: `
-        mutation {
-          createUser(userInput: {email:"${email}", password:"${password}"}){
-            _id
-            email
+          mutation {
+            createUser(userInput: {email: "${email}", password: "${password}"}) {
+              _id
+              email
+            }
           }
-        }
         `
       };
     }
@@ -63,13 +63,16 @@ const AuthPage = () => {
         return res.json();
       })
       .then(resData => {
-        if (resData.data.login.token) {
-          context.login(
-            resData.data.login.token,
-            resData.data.login.userId,
-            resData.data.login.tokenExpiration
-          );
+        if (isLogin) {
+          if (resData.data.login.token) {
+            context.login(
+              resData.data.login.token,
+              resData.data.login.userId,
+              resData.data.login.tokenExpiration
+            );
+          }
         }
+        console.log(resData);
       })
       .catch(err => {
         console.log(err);
