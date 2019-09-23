@@ -85,12 +85,6 @@ const BookingsPage = () => {
         return res.json();
       })
       .then(resData => {
-        // this.setState(prevState => {
-        //   const updatedBookings = prevState.bookings.filter(booking => {
-        //     return booking._id !== bookingId;
-        //   });
-        //   return { bookings: updatedBookings, isLoading: false };
-        // });
         setBookings(prevState => {
           const updatedBookings = prevState.filter(booking => {
             return booking._id !== bookingId;
