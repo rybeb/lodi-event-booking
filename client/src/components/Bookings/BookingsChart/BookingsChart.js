@@ -1,5 +1,5 @@
 import React from 'react';
-import { Bar as BarChart } from 'react-chartjs';
+import { Bar } from 'react-chartjs';
 
 const BOOKINGS_BUCKETS = {
   Cheap: {
@@ -47,7 +47,7 @@ const BookingsChart = props => {
 
   return (
     <div style={{ textAlign: 'center' }}>
-      <BarChart data={chartData} />
+      <Bar data={chartData} />
     </div>
   );
 };

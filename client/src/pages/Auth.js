@@ -1,5 +1,6 @@
 import React, { useRef, useState, useContext } from 'react';
 
+import axios from 'axios';
 import { AuthContext } from '../context/auth-context';
 import './Auth.css';
 
@@ -57,33 +58,17 @@ const AuthPage = () => {
       };
     }
 
-    fetch('http://localhost:5000/graphql', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Failed');
-        }
-        return res.json();
-      })
+    axios
+      .post('/graphql', requestBody)
       .then(resData => {
-        if (isLogin) {
-          if (resData.data.login.token) {
-            context.login(
-              resData.data.login.token,
-              resData.data.login.userId,
-              resData.data.login.tokenExpiration
-            );
-          }
+        const { token, userId, tokenExpiration } = resData.data.data.login;
+        if (isLogin && token) {
+          context.login(token, userId, tokenExpiration);
         }
         console.log(resData);
       })
       .catch(err => {
-        console.log(err);
+        console.log(err, err.data);
       });
   };
 

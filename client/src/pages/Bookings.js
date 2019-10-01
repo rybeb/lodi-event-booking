@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react';
+import axios from 'axios';
 
 import Spinner from '../components/Spinner/Spinner';
 import { AuthContext } from '../context/auth-context';
@@ -37,22 +38,14 @@ const BookingsPage = () => {
         `
     };
 
-    fetch('http://localhost:5000/graphql', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + context.token
-      }
-    })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Failed!');
+    axios
+      .post('/graphql', requestBody, {
+        headers: {
+          Authorization: 'Bearer ' + context.token
         }
-        return res.json();
       })
       .then(resData => {
-        const bookings_ = resData.data.bookings;
+        const bookings_ = resData.data.data.bookings;
         setBookings(bookings_);
         setIsLoading(false);
       })
@@ -78,19 +71,11 @@ const BookingsPage = () => {
       }
     };
 
-    fetch('http://localhost:5000/graphql', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + context.token
-      }
-    })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Failed!');
+    axios
+      .post('/graphql', requestBody, {
+        headers: {
+          Authorization: 'Bearer ' + context.token
         }
-        return res.json();
       })
       .then(resData => {
         setBookings(prevState => {
@@ -99,7 +84,6 @@ const BookingsPage = () => {
           });
           return updatedBookings;
         });
-
         setIsLoading(false);
       })
       .catch(err => {
@@ -134,7 +118,7 @@ const BookingsPage = () => {
       </>
     );
   }
-  return <React.Fragment>{content}</React.Fragment>;
+  return <>{content}</>;
 };
 
 export default BookingsPage;

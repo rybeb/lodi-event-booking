@@ -1,4 +1,5 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
+import axios from 'axios';
 
 import Modal from '../components/Modal/Modal';
 import Backdrop from '../components/Backdrop/Backdrop';
@@ -21,10 +22,6 @@ const EventsPage = () => {
   const priceElRef = useRef(null);
   const dateElRef = useRef(null);
   const descriptionElRef = useRef(null);
-
-  // useEffect(() => {
-  //   fetchEvents();
-  // }, []);
 
   const startCreateEventHandler = () => {
     setCreating(true);
@@ -69,29 +66,21 @@ const EventsPage = () => {
       }
     };
 
-    fetch('http://localhost:5000/graphql', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + context.token
-      }
-    })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Failed!');
+    axios
+      .post('/graphql', requestBody, {
+        headers: {
+          Authorization: 'Bearer ' + context.token
         }
-        return res.json();
       })
       .then(resData => {
         setEvents(prevEvents => {
           const updatedEvents = [...prevEvents];
           updatedEvents.push({
-            _id: resData.data.createEvent._id,
-            title: resData.data.createEvent.title,
-            description: resData.data.createEvent.description,
-            date: resData.data.createEvent.date,
-            price: resData.data.createEvent.price,
+            _id: resData.data.data.createEvent._id,
+            title: resData.data.data.createEvent.title,
+            description: resData.data.data.createEvent.description,
+            date: resData.data.data.createEvent.date,
+            price: resData.data.data.createEvent.price,
             creator: {
               _id: context.userId
             }
@@ -129,21 +118,14 @@ const EventsPage = () => {
         `
     };
 
-    fetch('http://localhost:5000/graphql', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Failed!');
+    axios
+      .post('/graphql', requestBody, {
+        headers: {
+          Authorization: 'Bearer ' + context.token
         }
-        return res.json();
       })
       .then(resData => {
-        const events2 = resData.data.events;
+        const events2 = resData.data.data.events;
         setEvents(events2);
         setIsLoading(false);
       })
@@ -165,7 +147,6 @@ const EventsPage = () => {
       setSelectedEvent(null);
       return;
     }
-    console.log(selectedEvent);
     const requestBody = {
       query: `
           mutation BookEvent($id: ID!) {
@@ -181,22 +162,13 @@ const EventsPage = () => {
       }
     };
 
-    fetch('http://localhost:5000/graphql', {
-      method: 'POST',
-      body: JSON.stringify(requestBody),
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + context.token
-      }
-    })
-      .then(res => {
-        if (res.status !== 200 && res.status !== 201) {
-          throw new Error('Failed!');
+    axios
+      .post('/graphql', requestBody, {
+        headers: {
+          Authorization: 'Bearer ' + context.token
         }
-        return res.json();
       })
       .then(resData => {
-        console.log(resData);
         setSelectedEvent(null);
       })
       .catch(err => {
@@ -210,11 +182,12 @@ const EventsPage = () => {
     return () => {
       isActive.current = false;
     };
+    // eslint-disable-next-line
   }, []);
 
   return (
     <>
-      {creating || (selectedEvent && <Backdrop />)}
+      {(creating || selectedEvent) && <Backdrop />}
       {creating && (
         <Modal
           title='Add Event'

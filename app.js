@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const graphqlHttp = require('express-graphql');
 const mongoose = require('mongoose');
+const path = require('path');
 
 const graphQlSchema = require('./graphql/schema/index');
 const graphQlResolvers = require('./graphql/resolvers/index');
@@ -32,7 +33,14 @@ app.use(
   })
 );
 
+app.use(express.static('public'));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
+});
+
 const MONGO_CONNECT_STRING = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-wtvo5.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
+const PORT = process.env.PORT || 5000;
 
 mongoose
   .connect(MONGO_CONNECT_STRING, {
@@ -40,7 +48,7 @@ mongoose
     useUnifiedTopology: true
   })
   .then(() => {
-    app.listen(5000);
+    app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
   })
   .catch(err => {
     console.log(err);

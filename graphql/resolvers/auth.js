@@ -28,11 +28,11 @@ module.exports = {
     }
     const isEqual = await bcrypt.compare(password, user.password);
     if (!isEqual) {
-      throw new Error('Password is incorrect!');
+      throw new Error('Invalid Credentials!');
     }
     const token = jwt.sign(
       { userId: user.id, email: user.email },
-      'somesupersecretkey',
+      process.env.KEY,
       {
         expiresIn: '1h'
       }
