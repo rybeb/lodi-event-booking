@@ -3,6 +3,7 @@
     "MONGO_USER": "rybeb2",
     "MONGO_PASSWORD": "J6SwLTMI6hECi6n4",
     "MONGO_DB": "events-react-dev",
-    "KEY": "somesupersecretkey"
+    "KEY": "somesupersecretkey",
+    "PORT": 5000
   }
 }

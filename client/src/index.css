@@ -4,7 +4,7 @@ body {
   font-family: sans-serif;
 }
 
-.form-control label,
+/* .form-control label,
 .form-control input,
 .form-control textarea {
   width: 100%;
@@ -16,9 +16,9 @@ body {
 }
 .form-control {
   margin-bottom: 1rem;
-}
+} */
 
-.form-actions button,
+/* .form-actions button,
 .btn {
   background: #747474;
   font: inherit;
@@ -36,4 +36,4 @@ body {
 .btn:active {
   background: rgb(92, 92, 92);
   border-color: rgb(92, 92, 92);
-}
+} */

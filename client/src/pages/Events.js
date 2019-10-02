@@ -1,10 +1,9 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import axios from 'axios';
+import { Form, Spinner } from 'react-bootstrap';
 
-import Modal from '../components/Modal/Modal';
-import Backdrop from '../components/Backdrop/Backdrop';
+import ModalComp from '../components/Modal/ModalComp';
 import EventList from '../components/Events/EventList/EventList';
-import Spinner from '../components/Spinner/Spinner';
 import { AuthContext } from '../context/auth-context';
 import './Events.css';
 
@@ -187,41 +186,61 @@ const EventsPage = () => {
 
   return (
     <>
-      {(creating || selectedEvent) && <Backdrop />}
-      {creating && (
-        <Modal
-          title='Add Event'
-          canCancel
-          canConfirm
-          onCancel={modalCancelHandler}
-          onConfirm={modalConfirmHandler}
-          confirmText='Confirm'
-        >
-          <form>
-            <div className='form-control'>
-              <label htmlFor='title'>Title</label>
-              <input type='text' id='title' ref={titleElRef} />
-            </div>
-            <div className='form-control'>
-              <label htmlFor='price'>Price</label>
-              <input type='number' id='price' ref={priceElRef} />
-            </div>
-            <div className='form-control'>
-              <label htmlFor='date'>Date</label>
-              <input type='datetime-local' id='date' ref={dateElRef} />
-            </div>
-            <div className='form-control'>
-              <label htmlFor='description'>Description</label>
-              <textarea id='description' rows='4' ref={descriptionElRef} />
-            </div>
-          </form>
-        </Modal>
-      )}
+      <ModalComp
+        title='Add Event'
+        canCancel
+        canConfirm
+        onShow={creating}
+        onCancel={modalCancelHandler}
+        onConfirm={modalConfirmHandler}
+        confirmText='Confirm'
+      >
+        <Form>
+          <Form.Group>
+            <Form.Label htmlFor='title'>Title</Form.Label>
+            <Form.Control
+              type='text'
+              id='title'
+              placeholder='Title'
+              ref={titleElRef}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label htmlFor='price'>Price</Form.Label>
+            <Form.Control
+              type='number'
+              id='price'
+              placeholder='Price'
+              ref={titleElRef}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label htmlFor='date'>Date</Form.Label>
+            <Form.Control
+              type='datetime-local'
+              id='date'
+              placeholder='Date'
+              ref={titleElRef}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label htmlFor='description'>Description</Form.Label>
+            <Form.Control
+              type='textarea'
+              id='description'
+              rows='4'
+              placeholder='Description'
+              ref={titleElRef}
+            />
+          </Form.Group>
+        </Form>
+      </ModalComp>
       {selectedEvent && (
-        <Modal
+        <ModalComp
           title={selectedEvent.title}
           canCancel
           canConfirm
+          canView
           onCancel={modalCancelHandler}
           onConfirm={bookEventHandler}
           confirmText={context.token ? 'Book' : 'Confirm'}
@@ -232,18 +251,22 @@ const EventsPage = () => {
             {new Date(selectedEvent.date).toLocaleDateString()}
           </h2>
           <p>{selectedEvent.description}</p>
-        </Modal>
+        </ModalComp>
       )}
       {context.token && (
         <div className='events-control'>
           <p>Share your own Events!</p>
-          <button className='btn' onClick={startCreateEventHandler}>
+          <button className='btn btn-dark' onClick={startCreateEventHandler}>
             Create Event
           </button>
         </div>
       )}
       {isLoading ? (
-        <Spinner />
+        <Spinner
+          animation='border'
+          role='status'
+          className='d-flex justify-content-center align-items-center mx-auto'
+        />
       ) : (
         <EventList
           events={events}

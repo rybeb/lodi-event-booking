@@ -108,13 +108,13 @@ const BookingsPage = () => {
           activeOutputType={outputType}
           onChange={changeOutputTypeHandler}
         />
-        <div>
+        <>
           {outputType === 'list' ? (
             <BookingList bookings={bookings} onDelete={deleteBookingHandler} />
           ) : (
             <BookingsChart bookings={bookings} />
           )}
-        </div>
+        </>
       </>
     );
   }

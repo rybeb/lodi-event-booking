@@ -14,7 +14,7 @@ const EventItem = props => (
         <p>Your the owner of this event.</p>
       ) : (
         <button
-          className='btn'
+          className='btn btn-dark'
           onClick={props.onDetail.bind(this, props.eventId)}
         >
           View Details
