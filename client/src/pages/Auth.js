@@ -28,6 +28,21 @@ const AuthPage = () => {
   // const switchModeHandler = () => {
   //   setIsLogin(!isLogin);
   // };
+
+  // requestBody = {
+  //   query: `
+  //     mutation CreateUser($email: String!, $password: String!) {
+  //       createUser(userInput: {email: $email, password: $password}) {
+  //         _id
+  //         email
+  //       }
+  //     }
+  //   `,
+  //   variables: {
+  //     email: email,
+  //     password: password
+  //   }
+  // };
   const submitHandler = async (email, password) => {
     let requestBody = {
       query: `
