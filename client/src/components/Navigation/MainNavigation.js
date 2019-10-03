@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Navbar, Nav } from 'react-bootstrap';
 
-import './MainNavigation.css';
 import { AuthContext } from '../../context/auth-context';
 
 const MainNavigation = props => {
@@ -28,15 +27,19 @@ const MainNavigation = props => {
         <Nav>
           {!context.token && (
             <NavLink className='nav-link' to='/auth'>
-              Login
+              Login / Signup
             </NavLink>
           )}
-          {context.token && (
-            <button className='btn btn-outline-dark' onClick={context.logout}>
-              Logout
-            </button>
-          )}
         </Nav>
+        {context.token && (
+          <button
+            type='button'
+            className='btn btn-outline-dark mt-3'
+            onClick={context.logout}
+          >
+            Logout
+          </button>
+        )}
       </Navbar.Collapse>
     </Navbar>
     // <header className='main-navigation'>

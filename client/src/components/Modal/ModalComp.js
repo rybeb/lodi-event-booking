@@ -2,7 +2,7 @@ import React from 'react';
 import { Modal } from 'react-bootstrap';
 
 const ModalComp = props => (
-  <Modal show={props.canView ? true : props.onShow} onHide={props.onCancel}>
+  <Modal show={true} onHide={props.onCancel}>
     <Modal.Header>
       <Modal.Title>{props.title}</Modal.Title>
     </Modal.Header>

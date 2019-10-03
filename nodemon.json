@@ -1,9 +1,9 @@
 {
   "env": {
     "MONGO_USER": "rybeb2",
-    "MONGO_PASSWORD": "J6SwLTMI6hECi6n4",
-    "MONGO_DB": "events-react-dev",
-    "KEY": "somesupersecretkey",
+    "MONGO_PASSWORD": "z9zcNSkVR6oG0svW",
+    "MONGO_DB": "lodi-event-booking",
+    "KEY": "superdupermegasecretkey",
     "PORT": 5000
   }
 }

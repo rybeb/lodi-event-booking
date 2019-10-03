@@ -1,6 +1,6 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
 import axios from 'axios';
-import { Form, Spinner } from 'react-bootstrap';
+import { Spinner } from 'react-bootstrap';
 
 import ModalComp from '../components/Modal/ModalComp';
 import EventList from '../components/Events/EventList/EventList';
@@ -27,7 +27,6 @@ const EventsPage = () => {
   };
 
   const modalConfirmHandler = () => {
-    setCreating(false);
     const title = titleElRef.current.value;
     const price = +priceElRef.current.value;
     const date = dateElRef.current.value;
@@ -41,9 +40,6 @@ const EventsPage = () => {
     ) {
       return;
     }
-
-    const event = { title, price, date, description };
-    console.log(event);
 
     const requestBody = {
       query: `
@@ -66,20 +62,27 @@ const EventsPage = () => {
     };
 
     axios
-      .post('/graphql', requestBody, {
+      .post('http://localhost:5000/graphql', requestBody, {
         headers: {
           Authorization: 'Bearer ' + context.token
         }
       })
       .then(resData => {
+        const {
+          _id,
+          title,
+          description,
+          date,
+          price
+        } = resData.data.data.createEvent;
         setEvents(prevEvents => {
           const updatedEvents = [...prevEvents];
           updatedEvents.push({
-            _id: resData.data.data.createEvent._id,
-            title: resData.data.data.createEvent.title,
-            description: resData.data.data.createEvent.description,
-            date: resData.data.data.createEvent.date,
-            price: resData.data.data.createEvent.price,
+            _id: _id,
+            title: title,
+            description: description,
+            date: date,
+            price: price,
             creator: {
               _id: context.userId
             }
@@ -90,6 +93,7 @@ const EventsPage = () => {
       .catch(err => {
         console.log(err);
       });
+    setCreating(false);
   };
 
   const modalCancelHandler = () => {
@@ -118,7 +122,7 @@ const EventsPage = () => {
     };
 
     axios
-      .post('/graphql', requestBody, {
+      .post('http://localhost:5000/graphql', requestBody, {
         headers: {
           Authorization: 'Bearer ' + context.token
         }
@@ -162,7 +166,7 @@ const EventsPage = () => {
     };
 
     axios
-      .post('/graphql', requestBody, {
+      .post('http://localhost:5000/graphql', requestBody, {
         headers: {
           Authorization: 'Bearer ' + context.token
         }
@@ -186,55 +190,55 @@ const EventsPage = () => {
 
   return (
     <>
-      <ModalComp
-        title='Add Event'
-        canCancel
-        canConfirm
-        onShow={creating}
-        onCancel={modalCancelHandler}
-        onConfirm={modalConfirmHandler}
-        confirmText='Confirm'
-      >
-        <Form>
-          <Form.Group>
-            <Form.Label htmlFor='title'>Title</Form.Label>
-            <Form.Control
-              type='text'
-              id='title'
-              placeholder='Title'
-              ref={titleElRef}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label htmlFor='price'>Price</Form.Label>
-            <Form.Control
-              type='number'
-              id='price'
-              placeholder='Price'
-              ref={titleElRef}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label htmlFor='date'>Date</Form.Label>
-            <Form.Control
-              type='datetime-local'
-              id='date'
-              placeholder='Date'
-              ref={titleElRef}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label htmlFor='description'>Description</Form.Label>
-            <Form.Control
-              type='textarea'
-              id='description'
-              rows='4'
-              placeholder='Description'
-              ref={titleElRef}
-            />
-          </Form.Group>
-        </Form>
-      </ModalComp>
+      {creating && (
+        <ModalComp
+          title='Add Event'
+          canCancel
+          canConfirm
+          onCancel={modalCancelHandler}
+          onConfirm={modalConfirmHandler}
+          confirmText='Confirm'
+        >
+          <form>
+            <div className='form-group'>
+              <label htmlFor='title'>Title</label>
+              <input
+                className='form-control'
+                type='text'
+                id='title'
+                ref={titleElRef}
+              />
+            </div>
+            <div className='form-group'>
+              <label htmlFor='price'>Price</label>
+              <input
+                className='form-control'
+                type='number'
+                id='price'
+                ref={priceElRef}
+              />
+            </div>
+            <div className='form-group'>
+              <label htmlFor='date'>Date</label>
+              <input
+                className='form-control'
+                type='datetime-local'
+                id='date'
+                ref={dateElRef}
+              />
+            </div>
+            <div className='form-group'>
+              <label htmlFor='description'>Description</label>
+              <textarea
+                className='form-control'
+                id='description'
+                rows='4'
+                ref={descriptionElRef}
+              />
+            </div>
+          </form>
+        </ModalComp>
+      )}
       {selectedEvent && (
         <ModalComp
           title={selectedEvent.title}

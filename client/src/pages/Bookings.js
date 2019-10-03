@@ -1,7 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import axios from 'axios';
+import { Spinner } from 'react-bootstrap';
 
-import Spinner from '../components/Spinner/Spinner';
 import { AuthContext } from '../context/auth-context';
 import BookingList from '../components/Bookings/BookingList/BookingList';
 import BookingsChart from '../components/Bookings/BookingsChart/BookingsChart';
@@ -39,7 +39,7 @@ const BookingsPage = () => {
     };
 
     axios
-      .post('/graphql', requestBody, {
+      .post('http://localhost:5000/graphql', requestBody, {
         headers: {
           Authorization: 'Bearer ' + context.token
         }
@@ -72,7 +72,7 @@ const BookingsPage = () => {
     };
 
     axios
-      .post('/graphql', requestBody, {
+      .post('http://localhost:5000/graphql', requestBody, {
         headers: {
           Authorization: 'Bearer ' + context.token
         }
@@ -100,7 +100,13 @@ const BookingsPage = () => {
     }
   };
 
-  let content = <Spinner />;
+  let content = (
+    <Spinner
+      animation='border'
+      role='status'
+      className='d-flex justify-content-center align-items-center mx-auto'
+    />
+  );
   if (!isLoading) {
     content = (
       <>

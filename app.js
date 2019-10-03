@@ -38,8 +38,7 @@ app.use(express.static('public'));
 app.get('*', (req, res) => {
   res.sendFile(path.resolve(__dirname, 'public', 'index.html'));
 });
-
-const MONGO_CONNECT_STRING = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-wtvo5.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
+const MONGO_CONNECT_STRING = `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@cluster0-jhpgv.mongodb.net/${process.env.MONGO_DB}?retryWrites=true&w=majority`;
 const PORT = process.env.PORT || 5000;
 
 mongoose
