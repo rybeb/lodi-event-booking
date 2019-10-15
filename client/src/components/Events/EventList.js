@@ -1,6 +1,5 @@
 import React from 'react';
-import EventItem from './EventItem/EventItem';
-import './EventList.css';
+import EventItem from './EventItem';
 
 const EventList = props => {
   const events = props.events.map(event => {
@@ -8,9 +7,9 @@ const EventList = props => {
       <EventItem
         key={event._id}
         eventId={event._id}
-        title={event.title}
-        price={event.price}
-        date={event.date}
+        title={event.name}
+        location={event.location}
+        starts={event.starts}
         userId={props.authUserId}
         creatorId={event.creator._id}
         onDetail={props.onViewDetail}
@@ -18,7 +17,14 @@ const EventList = props => {
     );
   });
 
-  return <ul className='event__list'>{events}</ul>;
+  return (
+    <ul
+      className='my-2 mx-auto list-unstyled p-0'
+      style={{ width: '40rem', maxWidth: '90%' }}
+    >
+      {events}
+    </ul>
+  );
 };
 
 export default EventList;

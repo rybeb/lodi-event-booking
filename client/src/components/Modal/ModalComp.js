@@ -2,8 +2,8 @@ import React from 'react';
 import { Modal } from 'react-bootstrap';
 
 const ModalComp = props => (
-  <Modal show={true} onHide={props.onCancel}>
-    <Modal.Header>
+  <Modal show={true} onHide={props.onCancel} centered>
+    <Modal.Header closeButton>
       <Modal.Title>{props.title}</Modal.Title>
     </Modal.Header>
     <Modal.Body>{props.children}</Modal.Body>

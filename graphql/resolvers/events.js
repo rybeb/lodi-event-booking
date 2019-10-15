@@ -18,10 +18,11 @@ module.exports = {
       throw new Error('Unauthenticated');
     }
     const event = new Event({
-      title: args.eventInput.title,
+      name: args.eventInput.name,
       description: args.eventInput.description,
-      price: +args.eventInput.price,
-      date: new Date(args.eventInput.date),
+      location: args.eventInput.location,
+      starts: new Date(args.eventInput.starts),
+      ends: new Date(args.eventInput.ends),
       creator: req.userId
     });
     try {
@@ -35,6 +36,18 @@ module.exports = {
       return transformEvent(result);
     } catch (err) {
       console.log(err);
+      throw err;
+    }
+  },
+  deleteEvent: async (args, req) => {
+    if (!req.isAuth) {
+      throw new Error('Unauthenticated');
+    }
+    try {
+      const event = await Event.findById(args.eventId).populate('event');
+      await Event.deleteOne({ _id: args.eventId });
+      return transformEvent(event);
+    } catch (err) {
       throw err;
     }
   }

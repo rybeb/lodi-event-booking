@@ -1,11 +1,12 @@
 import React, { useState, useContext } from 'react';
-import axios from 'axios';
 import { Formik } from 'formik';
 import { Form, Spinner } from 'react-bootstrap';
 import * as Yup from 'yup';
+import { useMutation } from '@apollo/react-hooks';
+import styled from 'styled-components';
 
+import { LOGIN, CREATE_USER } from '../components/Queries/Queries';
 import { AuthContext } from '../context/auth-context';
-import './Auth.css';
 
 const schema = Yup.object().shape({
   email: Yup.string()
@@ -20,101 +21,80 @@ const schema = Yup.object().shape({
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
-  const [globalError, setglobalError] = useState(null);
-
+  // const [globalError, setglobalError] = useState(null);
   const context = useContext(AuthContext);
+
+  const [Login, { loading, error, data }] = useMutation(LOGIN, {
+    errorPolicy: 'all'
+  });
+  const [
+    CreateUser,
+    { loading: loadingCreateUser, data: dataCreateUser, error: errorCreateUser }
+  ] = useMutation(CREATE_USER);
+
+  let globalError = '';
+
+  if (loading || loadingCreateUser) {
+    return (
+      <Spinner
+        animation='border'
+        role='status'
+        className='d-flex justify-content-center align-items-center mx-auto'
+      />
+    );
+  }
+  if (error) {
+    //TODO:
+    globalError = 'Email and/or password is incorrect, please try again!';
+    console.log(error.networkError.response);
+  }
+  if (data) {
+    console.log(data);
+    const { token, userId, tokenExpiration } = data.login;
+    context.login(token, userId, tokenExpiration);
+  }
+
+  if (errorCreateUser) {
+    globalError = 'User exist already!';
+    //TODO:
+  }
+  if (dataCreateUser) {
+    console.log(dataCreateUser);
+  }
 
   const switchModeHandler = () => {
     setIsLogin(!isLogin);
   };
 
-  const submitHandler = async (email, password) => {
-    const SIGNUP_QUERY = {
-      query: `
-        mutation CreateUser($email: String!, $password: String!) {
-          createUser(userInput: {email: $email, password: $password}) {
-            _id
-            email
-          }
-        }
-      `,
-      variables: {
-        email: email,
-        password: password
-      }
-    };
-    const LOGIN_QUERY = {
-      query: `
-        query Login($email: String!, $password: String!) {
-          login(email: $email, password: $password) {
-            userId
-            token
-            tokenExpiration
-          }
-        }
-      `,
-      variables: {
-        email: email,
-        password: password
-      }
-    };
-    const requestBody = isLogin ? LOGIN_QUERY : SIGNUP_QUERY;
-    try {
-      const res = await axios.post(
-        'http://localhost:5000/graphql',
-        requestBody
-      );
-      console.log(res);
-      if (isLogin) {
-        setIsLoading(false);
-        const { token, userId, tokenExpiration } = res.data.data.login;
-        return context.login(token, userId, tokenExpiration);
-      } else {
-        if (res.data.data.createUser !== null) {
-          setIsLoading(false);
-          return setglobalError('User created!');
-        }
-        const { message } = res.data.errors[0];
-        setIsLoading(false);
-        return setglobalError(message);
-      }
-    } catch (err) {
-      setIsLoading(false);
-      setglobalError(() => {
-        if (err.response) return err.response.data.errors[0].message;
-      });
-    }
-  };
-
   return (
-    <Formik
-      validationSchema={schema}
-      onSubmit={(values, { resetForm }) => {
-        const { email, password } = values;
-        setIsLoading(true);
-        submitHandler(email, password);
-        resetForm();
-      }}
-      initialValues={{ email: '', password: '' }}
-    >
-      {({
-        handleSubmit,
-        handleChange,
-        values,
-        touched,
-        errors,
-        handleReset
-      }) => (
-        <>
-          {isLoading ? (
-            <Spinner
-              animation='border'
-              role='status'
-              className='d-flex justify-content-center align-items-center mx-auto'
-            />
-          ) : (
-            <Form noValidate onSubmit={handleSubmit} className='auth-form'>
+    <AuthContainer>
+      <Formik
+        validationSchema={schema}
+        onSubmit={(values, { resetForm }) => {
+          const { email, password } = values;
+          if (isLogin) {
+            Login({
+              variables: { email, password }
+            });
+          } else {
+            CreateUser({
+              variables: { email, password }
+            });
+          }
+          // resetForm();
+        }}
+        initialValues={{ email: '', password: '' }}
+      >
+        {({
+          handleSubmit,
+          handleChange,
+          values,
+          touched,
+          errors,
+          handleReset
+        }) => (
+          <>
+            <Form onSubmit={handleSubmit} className='auth-form'>
               <Form.Group className='d-flex justify-content-between align-items-start'>
                 <p>{isLogin ? 'Login' : 'Signup'}</p>
                 <p
@@ -132,8 +112,7 @@ const AuthPage = () => {
                   <p className='text-danger small'>{globalError}</p>
                 )}
                 <Form.Control
-                  required
-                  type='email'
+                  type='text'
                   name='email'
                   value={values.email}
                   placeholder='Email'
@@ -161,17 +140,28 @@ const AuthPage = () => {
                 <button
                   type='submit'
                   className='btn btn-dark'
-                  disabled={isLoading}
+                  disabled={loading}
                 >
                   {!isLogin ? 'Signup' : 'Login'}
                 </button>
               </Form.Group>
             </Form>
-          )}
-        </>
-      )}
-    </Formik>
+          </>
+        )}
+      </Formik>
+    </AuthContainer>
   );
 };
 
 export default AuthPage;
+
+const AuthContainer = styled.div`
+  .auth-form {
+    width: 25rem;
+    max-width: 80%;
+    margin: 5rem auto;
+  }
+  .cursor-pointer {
+    cursor: pointer;
+  }
+`;

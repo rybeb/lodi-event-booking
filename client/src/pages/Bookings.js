@@ -1,130 +1,47 @@
-import React, { useState, useContext, useEffect } from 'react';
-import axios from 'axios';
+import React from 'react';
 import { Spinner } from 'react-bootstrap';
+import { useMutation, useQuery } from '@apollo/react-hooks';
 
-import { AuthContext } from '../context/auth-context';
-import BookingList from '../components/Bookings/BookingList/BookingList';
-import BookingsChart from '../components/Bookings/BookingsChart/BookingsChart';
-import BookingsControls from '../components/Bookings/BookingsControls/BookingsControls';
+import BookingList from '../components/Bookings/BookingList';
+import { FETCH_BOOKINGS, CANCEL_BOOKING } from '../components/Queries/Queries';
 
 const BookingsPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [bookings, setBookings] = useState([]);
-  const [outputType, setOutputType] = useState('list');
+  const { loading, error, data, refetch } = useQuery(FETCH_BOOKINGS);
 
-  const context = useContext(AuthContext);
+  const [CancelBooking] = useMutation(CANCEL_BOOKING, {
+    refetchQueries: [`FetchBookings`]
+  });
 
-  useEffect(() => {
-    fetchBookings();
-    // eslint-disable-next-line
-  }, []);
+  refetch();
 
-  const fetchBookings = () => {
-    setIsLoading(true);
-    const requestBody = {
-      query: `
-          query {
-            bookings {
-              _id
-             createdAt
-             event {
-               _id
-               title
-               date
-               price
-             }
+  let bookings_ = [];
+
+  if (data) data.bookings.map(booking => bookings_.push(booking));
+
+  return (
+    <>
+      {/* <h1>Bookings</h1> */}
+      {loading && (
+        <div className='mt-5'>
+          <Spinner
+            animation='border'
+            role='status'
+            className='d-flex justify-content-center align-items-center mx-auto'
+          />
+        </div>
+      )}
+      <BookingList
+        bookings={bookings_}
+        onDelete={bookingId => {
+          CancelBooking({
+            variables: {
+              id: bookingId
             }
-          }
-        `
-    };
-
-    axios
-      .post('http://localhost:5000/graphql', requestBody, {
-        headers: {
-          Authorization: 'Bearer ' + context.token
-        }
-      })
-      .then(resData => {
-        const bookings_ = resData.data.data.bookings;
-        setBookings(bookings_);
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.log(err);
-        setIsLoading(false);
-      });
-  };
-
-  const deleteBookingHandler = bookingId => {
-    setIsLoading(true);
-    const requestBody = {
-      query: `
-         mutation CancelBooking($id: ID!) {
-          cancelBooking(bookingId: $id) {
-            _id
-             title
-            }
-          }
-        `,
-      variables: {
-        id: bookingId
-      }
-    };
-
-    axios
-      .post('http://localhost:5000/graphql', requestBody, {
-        headers: {
-          Authorization: 'Bearer ' + context.token
-        }
-      })
-      .then(resData => {
-        setBookings(prevState => {
-          const updatedBookings = prevState.filter(booking => {
-            return booking._id !== bookingId;
           });
-          return updatedBookings;
-        });
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.log(err);
-        setIsLoading(false);
-      });
-  };
-
-  const changeOutputTypeHandler = outputType => {
-    if (outputType === 'list') {
-      setOutputType('list');
-    } else {
-      setOutputType('chart');
-    }
-  };
-
-  let content = (
-    <Spinner
-      animation='border'
-      role='status'
-      className='d-flex justify-content-center align-items-center mx-auto'
-    />
+        }}
+      />
+    </>
   );
-  if (!isLoading) {
-    content = (
-      <>
-        <BookingsControls
-          activeOutputType={outputType}
-          onChange={changeOutputTypeHandler}
-        />
-        <>
-          {outputType === 'list' ? (
-            <BookingList bookings={bookings} onDelete={deleteBookingHandler} />
-          ) : (
-            <BookingsChart bookings={bookings} />
-          )}
-        </>
-      </>
-    );
-  }
-  return <>{content}</>;
 };
 
 export default BookingsPage;

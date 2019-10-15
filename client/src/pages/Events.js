@@ -1,193 +1,120 @@
 import React, { useState, useContext, useRef, useEffect } from 'react';
-import axios from 'axios';
-import { Spinner } from 'react-bootstrap';
+import { Link, Redirect } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/react-hooks';
+import { Form, Spinner, Row, Col } from 'react-bootstrap';
 
 import ModalComp from '../components/Modal/ModalComp';
-import EventList from '../components/Events/EventList/EventList';
+import EventList from '../components/Events/EventList';
 import { AuthContext } from '../context/auth-context';
-import './Events.css';
+import {
+  CREATE_EVENT,
+  FETCH_EVENTS,
+  BOOK_EVENT
+} from '../components/Queries/Queries';
 
 const EventsPage = () => {
+  const [validated, setValidated] = useState(false);
+  const [redirect, setRedirect] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [events, setEvents] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-
-  const isActive = useRef(true);
-
   const context = useContext(AuthContext);
-
-  const titleElRef = useRef(null);
-  const priceElRef = useRef(null);
-  const dateElRef = useRef(null);
+  const nameElRef = useRef(null);
+  const locationElRef = useRef(null);
   const descriptionElRef = useRef(null);
+  const startsElRef = useRef(null);
+  const endsElRef = useRef(null);
+
+  const [CreateEvent, { error: errorCreate }] = useMutation(CREATE_EVENT, {
+    refetchQueries: [`FetchEvents`]
+  });
+
+  const [BookEvent] = useMutation(BOOK_EVENT, {
+    refetchQueries: [`FetchBookings`]
+  });
+
+  const {
+    loading: loadingFetch,
+    error: errorFetch,
+    data: dataFetch,
+    refetch
+  } = useQuery(FETCH_EVENTS);
+
+  refetch();
+
+  let events_ = [];
+
+  if (dataFetch) dataFetch.events.map(event => events_.push(event));
 
   const startCreateEventHandler = () => {
     setCreating(true);
   };
 
-  const modalConfirmHandler = () => {
-    const title = titleElRef.current.value;
-    const price = +priceElRef.current.value;
-    const date = dateElRef.current.value;
+  const modalConfirmHandler = event => {
+    const name = nameElRef.current.value;
+    const location = locationElRef.current.value;
     const description = descriptionElRef.current.value;
+    const starts = startsElRef.current.value;
+    const ends = endsElRef.current.value;
+
+    const form = event.currentTarget;
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+
+    setValidated(true);
 
     if (
-      title.trim().length === 0 ||
-      price <= 0 ||
-      date.trim().length === 0 ||
-      description.trim().length === 0
+      name.trim().length === 0 ||
+      location.trim().length === 0 ||
+      description.trim().length === 0 ||
+      starts.trim().length === 0 ||
+      ends.trim().length === 0
     ) {
       return;
     }
 
-    const requestBody = {
-      query: `
-          mutation CreateEvent($title: String!, $desc: String!, $price: Float!, $date: String!) {
-            createEvent(eventInput: {title: $title, description: $desc, price: $price, date: $date}) {
-              _id
-              title
-              description
-              date
-              price
-            }
-          }
-        `,
+    CreateEvent({
       variables: {
-        title: title,
-        desc: description,
-        price: price,
-        date: date
+        name: name,
+        location: location,
+        description: description,
+        starts: starts,
+        ends: ends
       }
-    };
+    });
 
-    axios
-      .post('http://localhost:5000/graphql', requestBody, {
-        headers: {
-          Authorization: 'Bearer ' + context.token
-        }
-      })
-      .then(resData => {
-        const {
-          _id,
-          title,
-          description,
-          date,
-          price
-        } = resData.data.data.createEvent;
-        setEvents(prevEvents => {
-          const updatedEvents = [...prevEvents];
-          updatedEvents.push({
-            _id: _id,
-            title: title,
-            description: description,
-            date: date,
-            price: price,
-            creator: {
-              _id: context.userId
-            }
-          });
-          return updatedEvents;
-        });
-      })
-      .catch(err => {
-        console.log(err);
-      });
     setCreating(false);
   };
 
   const modalCancelHandler = () => {
     setCreating(false);
     setSelectedEvent(null);
-  };
-
-  const fetchEvents = () => {
-    setIsLoading(true);
-    const requestBody = {
-      query: `
-          query {
-            events {
-              _id
-              title
-              description
-              date
-              price
-              creator {
-                _id
-                email
-              }
-            }
-          }
-        `
-    };
-
-    axios
-      .post('http://localhost:5000/graphql', requestBody, {
-        headers: {
-          Authorization: 'Bearer ' + context.token
-        }
-      })
-      .then(resData => {
-        const events2 = resData.data.data.events;
-        setEvents(events2);
-        setIsLoading(false);
-      })
-      .catch(err => {
-        console.log(err);
-        if (isActive) {
-          setIsLoading(false);
-        }
-      });
+    setValidated(false);
   };
 
   const showDetailHandler = eventId => {
-    const selectedEvent = events.find(e => e._id === eventId);
+    const selectedEvent = events_.find(e => e._id === eventId);
     setSelectedEvent(selectedEvent);
   };
 
   const bookEventHandler = () => {
     if (!context.token) {
       setSelectedEvent(null);
+      setRedirect(true);
       return;
     }
-    const requestBody = {
-      query: `
-          mutation BookEvent($id: ID!) {
-            bookEvent(eventId: $id) {
-              _id
-             createdAt
-             updatedAt
-            }
-          }
-        `,
+
+    BookEvent({
       variables: {
         id: selectedEvent._id
       }
-    };
-
-    axios
-      .post('http://localhost:5000/graphql', requestBody, {
-        headers: {
-          Authorization: 'Bearer ' + context.token
-        }
-      })
-      .then(resData => {
-        setSelectedEvent(null);
-      })
-      .catch(err => {
-        console.log(err);
-      });
+    }).then(() => {
+      setSelectedEvent(null);
+    });
   };
 
-  useEffect(() => {
-    fetchEvents();
-    isActive.current = true;
-    return () => {
-      isActive.current = false;
-    };
-    // eslint-disable-next-line
-  }, []);
-
+  if (redirect) return <Redirect push to='/auth' />;
   return (
     <>
       {creating && (
@@ -199,44 +126,82 @@ const EventsPage = () => {
           onConfirm={modalConfirmHandler}
           confirmText='Confirm'
         >
-          <form>
-            <div className='form-group'>
-              <label htmlFor='title'>Title</label>
-              <input
-                className='form-control'
-                type='text'
-                id='title'
-                ref={titleElRef}
-              />
-            </div>
-            <div className='form-group'>
-              <label htmlFor='price'>Price</label>
-              <input
-                className='form-control'
-                type='number'
-                id='price'
-                ref={priceElRef}
-              />
-            </div>
-            <div className='form-group'>
-              <label htmlFor='date'>Date</label>
-              <input
-                className='form-control'
-                type='datetime-local'
-                id='date'
-                ref={dateElRef}
-              />
-            </div>
-            <div className='form-group'>
-              <label htmlFor='description'>Description</label>
-              <textarea
-                className='form-control'
-                id='description'
-                rows='4'
-                ref={descriptionElRef}
-              />
-            </div>
-          </form>
+          <Form noValidate validated={validated}>
+            <Form.Group as={Row}>
+              <Form.Label column sm={2} htmlFor='name'>
+                Name
+              </Form.Label>
+              <Col sm={8}>
+                <Form.Control
+                  type='text'
+                  id='name'
+                  ref={nameElRef}
+                  placeholder='Name'
+                  required
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm={2} htmlFor='location'>
+                Location
+              </Form.Label>
+              <Col sm={10}>
+                <Form.Control
+                  type='text'
+                  id='location'
+                  ref={locationElRef}
+                  placeholder='Location'
+                  required
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm={2} htmlFor='description'>
+                Description
+              </Form.Label>
+              <Col sm={10}>
+                <Form.Control
+                  as='textarea'
+                  id='description'
+                  rows='3'
+                  ref={descriptionElRef}
+                  placeholder='Description'
+                  required
+                />
+              </Col>
+              {/* <Form.Control.Feedback type='invalid'>
+                Provide a description.
+              </Form.Control.Feedback> */}
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm={2} htmlFor='starts'>
+                Starts
+              </Form.Label>
+              <Col sm={6}>
+                <Form.Control
+                  type='datetime-local'
+                  id='starts'
+                  ref={startsElRef}
+                  placeholder='Starts'
+                  required
+                />
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row}>
+              <Form.Label column sm={2} htmlFor='ends'>
+                Ends
+              </Form.Label>
+              <Col sm={6}>
+                <Form.Control
+                  type='datetime-local'
+                  id='ends'
+                  ref={endsElRef}
+                  placeholder='Ends'
+                  required
+                />
+              </Col>
+            </Form.Group>
+          </Form>
         </ModalComp>
       )}
       {selectedEvent && (
@@ -247,37 +212,42 @@ const EventsPage = () => {
           canView
           onCancel={modalCancelHandler}
           onConfirm={bookEventHandler}
-          confirmText={context.token ? 'Book' : 'Confirm'}
+          confirmText={context.token ? 'Book' : 'Login to Book'}
         >
-          <h1>{selectedEvent.title}</h1>
+          <h1>{selectedEvent.name}</h1>
           <h2>
-            ${selectedEvent.price} -{' '}
-            {new Date(selectedEvent.date).toLocaleDateString()}
+            {new Date(selectedEvent.starts).toLocaleDateString()} -{' '}
+            {selectedEvent.location}
           </h2>
           <p>{selectedEvent.description}</p>
         </ModalComp>
       )}
       {context.token && (
-        <div className='events-control'>
+        <div
+          className='text-center border border-dark p-1 my-2 mx-auto'
+          style={{ width: '30rem', maxWidth: '80%' }}
+        >
           <p>Share your own Events!</p>
-          <button className='btn btn-dark' onClick={startCreateEventHandler}>
+          <button
+            className='btn btn-dark mb-2'
+            onClick={startCreateEventHandler}
+          >
             Create Event
           </button>
         </div>
       )}
-      {isLoading ? (
+      {loadingFetch && (
         <Spinner
           animation='border'
           role='status'
           className='d-flex justify-content-center align-items-center mx-auto'
         />
-      ) : (
-        <EventList
-          events={events}
-          authUserId={context.userId}
-          onViewDetail={showDetailHandler}
-        />
       )}
+      <EventList
+        events={events_}
+        authUserId={context.userId}
+        onViewDetail={showDetailHandler}
+      />
     </>
   );
 };
