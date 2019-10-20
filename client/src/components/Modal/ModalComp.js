@@ -4,7 +4,7 @@ import { Modal } from 'react-bootstrap';
 const ModalComp = props => (
   <Modal show={true} onHide={props.onCancel} centered>
     <Modal.Header closeButton>
-      <Modal.Title>{props.title}</Modal.Title>
+      <Modal.Title>{props.name}</Modal.Title>
     </Modal.Header>
     <Modal.Body>{props.children}</Modal.Body>
     <Modal.Footer>

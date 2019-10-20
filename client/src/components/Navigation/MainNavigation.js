@@ -8,7 +8,7 @@ const MainNavigation = props => {
   const context = useContext(AuthContext);
 
   return (
-    <Navbar bg='light' expand='lg'>
+    <Navbar bg='dark' variant='dark' expand='lg'>
       <Navbar.Brand href='/' className='p-2'>
         L O D I
       </Navbar.Brand>
@@ -34,7 +34,7 @@ const MainNavigation = props => {
         {context.token && (
           <button
             type='button'
-            className='btn btn-outline-dark mt-3'
+            className='btn btn-outline-light mt-3'
             onClick={context.logout}
           >
             Logout

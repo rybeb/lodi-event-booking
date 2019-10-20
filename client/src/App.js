@@ -46,7 +46,7 @@ const App = () => {
     <ApolloProvider client={client}>
       <BrowserRouter>
         <MainNavigaton />
-        <main className='main-content'>
+        <main className='main-content container-fluid'>
           <Switch>
             {context.token && <Redirect from='/' to='/events' exact />}
             {context.token && <Redirect from='/auth' to='/events' exact />}
