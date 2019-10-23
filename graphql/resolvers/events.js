@@ -22,7 +22,7 @@ module.exports = {
       description: args.eventInput.description,
       location: args.eventInput.location,
       starts: new Date(args.eventInput.starts),
-      ends: new Date(args.eventInput.ends),
+      ends: args.eventInput.ends ? new Date(args.eventInput.ends) : null,
       creator: req.userId
     });
     try {

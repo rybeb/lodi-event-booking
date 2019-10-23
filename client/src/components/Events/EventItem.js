@@ -1,9 +1,9 @@
 import React from 'react';
 
-import { DAYS, MONTHS } from '../../helper/date-arrays';
+import { days, months } from '../../helper/date-helper';
 
 const EventItem = props => (
-  <div key={props.eventId} className='card mb-3 col-12'>
+  <div key={props.eventId} className='card'>
     <div className='card-body'>
       <h5
         className='card-title text-center'
@@ -16,13 +16,19 @@ const EventItem = props => (
         {props.name}
       </h5>
       <div className='d-flex flex-row align-items-start'>
-        <div className='d-flex flex-column justify-content-center align-items-center'>
-          <span className='text-danger'>{MONTHS(props.starts)}</span>
+        <div className='d-flex flex-column justify-content-center align-items-center '>
+          <span className='text-danger'>{months(props.starts)}</span>
           <h1>{new Date(props.starts).getDate()}</h1>
         </div>
         <div className='mt-2 ml-2'>
-          <h6 className='card-subtitle text-muted'>
-            {DAYS(props.starts)} - {props.location}
+          <h6
+            className='card-subtitle text-muted'
+            style={{
+              wordWrap: 'break-word',
+              whiteSpace: 'pre-wrap'
+            }}
+          >
+            {days(props.starts)} - {props.location}
           </h6>
         </div>
       </div>

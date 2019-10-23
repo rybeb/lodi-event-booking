@@ -1,11 +1,27 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { MdNavigateBefore, MdNavigateNext } from 'react-icons/md';
-import { AuthContext } from '../../context/auth-context';
+import React, { useContext } from 'react';
 
+import { AuthContext } from '../../context/auth-context';
 import EventItem from './EventItem';
+import EventSlider from './EventSlider';
 
 const EventList = props => {
   const context = useContext(AuthContext);
+
+  const myBookings = props.bookings.map(event => {
+    return (
+      <EventItem
+        key={event._id}
+        eventId={event._id}
+        name={event.name}
+        location={event.location}
+        description={event.description}
+        starts={event.starts}
+        userId={props.authUserId}
+        creatorId={event.creator._id}
+        onDetail={props.onViewDetail}
+      />
+    );
+  });
 
   const myEvents = props.events
     .filter(event => event.creator._id === props.authUserId)
@@ -44,22 +60,18 @@ const EventList = props => {
     });
 
   return (
-    <div className='container mt-3'>
+    <>
       {context.token && (
-        <div className='card mb-3'>
-          <h5 className='card-header'>My Events</h5>
-          <div className='card-body'>
-            <div className='card-deck'>{myEvents}</div>
-          </div>
-        </div>
+        <>
+          <EventSlider
+            header='My Events'
+            events={[...myEvents, ...myBookings]}
+          />
+          <EventSlider header='Other Events' events={otherEvents} />
+        </>
       )}
-      <div className='card mb-3'>
-        <h5 className='card-header'>Events</h5>
-        <div className='card-body'>
-          <div className='card-deck'>{otherEvents}</div>
-        </div>
-      </div>
-    </div>
+      {!context.token && <EventSlider header='Events' events={otherEvents} />}
+    </>
   );
 };
 

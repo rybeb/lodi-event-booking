@@ -39,27 +39,23 @@ const AuthPage = () => {
       <Spinner
         animation='border'
         role='status'
-        className='d-flex justify-content-center align-items-center mx-auto'
+        className='d-flex justify-content-center align-items-center mx-auto mt-5'
       />
     );
   }
   if (error) {
-    //TODO:
     globalError = 'Email and/or password is incorrect, please try again!';
-    console.log(error.networkError.response);
   }
   if (data) {
-    console.log(data);
     const { token, userId, tokenExpiration } = data.login;
     context.login(token, userId, tokenExpiration);
   }
 
   if (errorCreateUser) {
     globalError = 'User exist already!';
-    //TODO:
   }
   if (dataCreateUser) {
-    console.log(dataCreateUser);
+    globalError = 'User created!';
   }
 
   const switchModeHandler = () => {

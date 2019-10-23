@@ -3,40 +3,43 @@ import { Link, Redirect } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/react-hooks';
 import { Form, Spinner, Row, Col } from 'react-bootstrap';
 
-import {
-  DAYS,
-  MONTHS,
-  MONTHS_FULL,
-  HOURS,
-  DATE,
-  YEAR
-} from '../helper/date-arrays';
-import { MdLocationOn, MdAccessTime } from 'react-icons/md';
+import { eventDate, date_full } from '../helper/date-helper';
+import { MdLocationOn, MdAccessTime, MdAdd } from 'react-icons/md';
 import ModalComp from '../components/Modal/ModalComp';
 import EventList from '../components/Events/EventList';
 import { AuthContext } from '../context/auth-context';
 import {
   CREATE_EVENT,
   FETCH_EVENTS,
-  BOOK_EVENT
+  BOOK_EVENT,
+  FETCH_BOOKINGS
 } from '../components/Queries/Queries';
-import Display from '../components/Slider/Slider';
 
 const EventsPage = () => {
+  const context = useContext(AuthContext);
   const [validated, setValidated] = useState(false);
   const [redirect, setRedirect] = useState(false);
   const [creating, setCreating] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const context = useContext(AuthContext);
+  const [endDate, setEndDate] = useState(false);
+  const [sDate, setSDate] = useState('');
+
   const nameElRef = useRef(null);
   const locationElRef = useRef(null);
   const descriptionElRef = useRef(null);
   const startsElRef = useRef(null);
   const endsElRef = useRef(null);
 
-  const [CreateEvent, { error: errorCreate }] = useMutation(CREATE_EVENT, {
+  const [CreateEvent] = useMutation(CREATE_EVENT, {
     refetchQueries: [`FetchEvents`]
   });
+
+  const {
+    loading: loadingBook,
+    error: errorBook,
+    data: dataBook,
+    refetch: refetchBook
+  } = useQuery(FETCH_BOOKINGS);
 
   const [BookEvent] = useMutation(BOOK_EVENT, {
     refetchQueries: [`FetchBookings`]
@@ -55,6 +58,12 @@ const EventsPage = () => {
 
   if (dataFetch) dataFetch.events.map(event => events_.push(event));
 
+  refetchBook();
+
+  let bookings_ = [];
+
+  if (dataBook) dataBook.bookings.map(booking => bookings_.push(booking.event));
+
   const startCreateEventHandler = () => {
     setCreating(true);
   };
@@ -64,7 +73,8 @@ const EventsPage = () => {
     const location = locationElRef.current.value;
     const description = descriptionElRef.current.value;
     const starts = startsElRef.current.value;
-    const ends = endsElRef.current.value;
+    let ends = '';
+    if (endDate) ends = endsElRef.current.value;
 
     const form = event.currentTarget;
     if (form.checkValidity() === false) {
@@ -78,8 +88,7 @@ const EventsPage = () => {
       name.trim().length === 0 ||
       location.trim().length === 0 ||
       description.trim().length === 0 ||
-      starts.trim().length === 0 ||
-      ends.trim().length === 0
+      starts.trim().length === 0
     ) {
       return;
     }
@@ -119,15 +128,18 @@ const EventsPage = () => {
       variables: {
         id: selectedEvent._id
       }
-    }).then(() => {
-      setSelectedEvent(null);
-    });
+    }).then(() => setSelectedEvent(null));
+  };
+
+  const addEndDate = () => {
+    setEndDate(!endDate);
   };
 
   if (redirect) return <Redirect push to='/auth' />;
 
   return (
     <>
+      {/* Create Event Modal */}
       {creating && (
         <ModalComp
           name='Create Event'
@@ -174,7 +186,7 @@ const EventsPage = () => {
                 <Form.Control
                   as='textarea'
                   id='description'
-                  rows='3'
+                  rows='2'
                   ref={descriptionElRef}
                   placeholder='Description'
                   required
@@ -187,31 +199,47 @@ const EventsPage = () => {
               </Form.Label>
               <Col sm={7}>
                 <Form.Control
+                  as='input'
                   type='datetime-local'
                   id='starts'
                   ref={startsElRef}
-                  placeholder='Starts'
+                  min={date_full(new Date())}
+                  onChange={e => setSDate(e.target.value)}
                   required
                 />
               </Col>
-            </Form.Group>
-            <Form.Group as={Row}>
-              <Form.Label column sm={2} htmlFor='ends'>
-                Ends
+              <Form.Label
+                column
+                sm={3}
+                onClick={e => {
+                  e.preventDefault();
+                  addEndDate();
+                }}
+                style={{ cursor: 'pointer' }}
+              >
+                + End Date
               </Form.Label>
-              <Col sm={7}>
-                <Form.Control
-                  type='datetime-local'
-                  id='ends'
-                  ref={endsElRef}
-                  placeholder='Ends'
-                  required
-                />
-              </Col>
             </Form.Group>
+            {endDate && (
+              <Form.Group as={Row}>
+                <Form.Label column sm={2} htmlFor='ends'>
+                  Ends
+                </Form.Label>
+                <Col sm={7}>
+                  <Form.Control
+                    as='input'
+                    type='datetime-local'
+                    id='ends'
+                    ref={endsElRef}
+                    min={sDate.toString()}
+                  />
+                </Col>
+              </Form.Group>
+            )}
           </Form>
         </ModalComp>
       )}
+      {/* View Event Modal */}
       {selectedEvent && (
         <ModalComp
           name={selectedEvent.name}
@@ -223,34 +251,11 @@ const EventsPage = () => {
           confirmText={context.token ? 'Book' : 'Login to Book'}
         >
           <h5>Hosted by {selectedEvent.creator.email}</h5>
-          <>
-            {DAYS(selectedEvent.starts) !== DAYS(selectedEvent.ends) && (
-              <h6 className='text-muted'>
-                <MdAccessTime className='mr-3' />
-                {MONTHS(selectedEvent.starts)} {DATE(selectedEvent.starts)}
-                {' at '}
-                {HOURS(selectedEvent.starts)}
-                {' - '}
-                {MONTHS(selectedEvent.ends)} {DATE(selectedEvent.ends)}
-                {' at '}
-                {HOURS(selectedEvent.ends)}
-              </h6>
-            )}
-            {DAYS(selectedEvent.starts) === DAYS(selectedEvent.ends) && (
-              <h6 className='text-muted'>
-                <MdAccessTime className='mr-3' />
-                {DAYS(selectedEvent.starts)},{' '}
-                {MONTHS_FULL(selectedEvent.starts)} {DATE(selectedEvent.starts)}
-                {', '}
-                {YEAR(selectedEvent.starts)}
-                {' at '}
-                {HOURS(selectedEvent.starts)}
-                {' - '}
-                {HOURS(selectedEvent.ends)}
-              </h6>
-            )}
-          </>
-          <h6 className='text-muted'>
+          <h6 className='text-muted d-flex align-items-center'>
+            <MdAccessTime className='mr-3' />
+            {eventDate(selectedEvent.starts, selectedEvent.ends)}
+          </h6>
+          <h6 className='text-muted d-flex align-items-center'>
             <MdLocationOn className='mr-3' />
             {selectedEvent.location}
           </h6>
@@ -260,16 +265,19 @@ const EventsPage = () => {
           </div>
         </ModalComp>
       )}
+      {/* Create event */}
       {context.token && (
         <div className='mt-5 ml-5'>
           <button
-            className='btn btn-dark mb-2'
+            className='btn btn-dark mb-2 d-flex align-items-center justify-content-center'
             onClick={startCreateEventHandler}
           >
-            + Create Event
+            <MdAdd className='mr-2' />
+            <span>Create Event</span>
           </button>
         </div>
       )}
+      {/* Loading and Display Events */}
       {loadingFetch && (
         <Spinner
           animation='border'
@@ -278,14 +286,12 @@ const EventsPage = () => {
         />
       )}
       {!loadingFetch && (
-        <>
-          <EventList
-            events={events_}
-            authUserId={context.userId}
-            onViewDetail={showDetailHandler}
-          />
-          <Display />
-        </>
+        <EventList
+          events={events_}
+          bookings={bookings_}
+          authUserId={context.userId}
+          onViewDetail={showDetailHandler}
+        />
       )}
     </>
   );

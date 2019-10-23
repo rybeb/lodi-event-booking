@@ -85,6 +85,10 @@ export const FETCH_BOOKINGS = gql`
         description
         starts
         ends
+        creator {
+          _id
+          email
+        }
       }
     }
   }

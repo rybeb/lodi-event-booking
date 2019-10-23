@@ -15,7 +15,7 @@ module.exports = buildSchema(`
         location: String!
         description: String!
         starts: String!
-        ends: String!
+        ends: String
         creator: User!
     }
 
@@ -37,7 +37,7 @@ module.exports = buildSchema(`
         location: String!
         description: String!
         starts: String!
-        ends: String!
+        ends: String
     }
 
     input UserInput {
