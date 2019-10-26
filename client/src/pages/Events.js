@@ -3,7 +3,7 @@ import { Link, Redirect } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/react-hooks';
 import { Form, Spinner, Row, Col } from 'react-bootstrap';
 
-import { eventDate, date_full } from '../helper/date-helper';
+import { eventDate, date_full, months } from '../helper/date-helper';
 import { MdLocationOn, MdAccessTime, MdAdd } from 'react-icons/md';
 import ModalComp from '../components/Modal/ModalComp';
 import EventList from '../components/Events/EventList';
@@ -11,8 +11,11 @@ import { AuthContext } from '../context/auth-context';
 import {
   CREATE_EVENT,
   FETCH_EVENTS,
+  DELETE_EVENT,
+  PAST_EVENT,
   BOOK_EVENT,
-  FETCH_BOOKINGS
+  FETCH_BOOKINGS,
+  CANCEL_BOOKING
 } from '../components/Queries/Queries';
 
 const EventsPage = () => {
@@ -21,8 +24,9 @@ const EventsPage = () => {
   const [redirect, setRedirect] = useState(false);
   const [creating, setCreating] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const [endDate, setEndDate] = useState(false);
-  const [sDate, setSDate] = useState('');
+  const [startDate, setStartDate] = useState('');
 
   const nameElRef = useRef(null);
   const locationElRef = useRef(null);
@@ -35,34 +39,41 @@ const EventsPage = () => {
   });
 
   const {
-    loading: loadingBook,
-    error: errorBook,
-    data: dataBook,
-    refetch: refetchBook
-  } = useQuery(FETCH_BOOKINGS);
-
-  const [BookEvent] = useMutation(BOOK_EVENT, {
-    refetchQueries: [`FetchBookings`]
-  });
-
-  const {
     loading: loadingFetch,
     error: errorFetch,
     data: dataFetch,
     refetch
   } = useQuery(FETCH_EVENTS);
 
+  const [DeleteEvent] = useMutation(DELETE_EVENT, {
+    onCompleted: () => setSelectedEvent(null)
+  });
+
+  const {
+    loading: loadingBook,
+    error: errorBook,
+    data: dataBook,
+    refetch: refetchBook
+  } = useQuery(FETCH_BOOKINGS);
+
+  const [PastEvent] = useMutation(PAST_EVENT);
+
+  const [BookEvent] = useMutation(BOOK_EVENT, {
+    onCompleted: () => setSelectedEvent(null)
+  });
+
+  const [CancelBooking] = useMutation(CANCEL_BOOKING, {
+    onCompleted: () => setSelectedBooking(null)
+  });
+
   refetch();
-
-  let events_ = [];
-
-  if (dataFetch) dataFetch.events.map(event => events_.push(event));
-
   refetchBook();
 
-  let bookings_ = [];
+  let events_ = [],
+    bookings_ = [];
 
-  if (dataBook) dataBook.bookings.map(booking => bookings_.push(booking.event));
+  if (dataFetch) dataFetch.events.map(e => events_.push(e));
+  if (dataBook) dataBook.bookings.map(b => bookings_.push(b));
 
   const startCreateEventHandler = () => {
     setCreating(true);
@@ -95,47 +106,64 @@ const EventsPage = () => {
 
     CreateEvent({
       variables: {
-        name: name,
-        location: location,
-        description: description,
-        starts: starts,
-        ends: ends
+        name,
+        location,
+        description,
+        starts,
+        ends
       }
     });
-
+    setValidated(false);
     setCreating(false);
   };
 
   const modalCancelHandler = () => {
     setCreating(false);
     setSelectedEvent(null);
+    setSelectedBooking(null);
     setValidated(false);
+    setEndDate(false);
   };
 
-  const showDetailHandler = eventId => {
+  const showEventDetail = eventId => {
     const selectedEvent = events_.find(e => e._id === eventId);
     setSelectedEvent(selectedEvent);
   };
+  const showBookDetail = bookId => {
+    const selectedBooking = bookings_.find(b => b._id === bookId);
+    setSelectedBooking(selectedBooking);
+  };
 
-  const bookEventHandler = () => {
-    if (!context.token) {
-      setSelectedEvent(null);
-      setRedirect(true);
-      return;
-    }
-
-    BookEvent({
-      variables: {
-        id: selectedEvent._id
-      }
-    }).then(() => setSelectedEvent(null));
+  const unAuth = () => {
+    setSelectedEvent(null);
+    setRedirect(true);
+    return;
   };
 
   const addEndDate = () => {
     setEndDate(!endDate);
   };
 
+  const pastEventsDeleter = () => {
+    return events_
+      .filter(e => {
+        return e.ends
+          ? new Date(e.ends) < new Date()
+          : new Date(e.starts) < new Date();
+      })
+      .map(e => {
+        PastEvent({ variables: { id: e._id } });
+        console.log(`${e.name} deleted`);
+      });
+  };
+
+  useEffect(() => {
+    pastEventsDeleter();
+  }, [dataFetch]);
+
   if (redirect) return <Redirect push to='/auth' />;
+
+  const { token, userId } = context;
 
   return (
     <>
@@ -143,11 +171,9 @@ const EventsPage = () => {
       {creating && (
         <ModalComp
           name='Create Event'
-          canCancel
-          canConfirm
-          onCancel={modalCancelHandler}
-          onConfirm={modalConfirmHandler}
-          confirmText='Confirm'
+          canCreate
+          onBack={modalCancelHandler}
+          onCreate={modalConfirmHandler}
         >
           <Form noValidate validated={validated}>
             <Form.Group as={Row}>
@@ -203,8 +229,8 @@ const EventsPage = () => {
                   type='datetime-local'
                   id='starts'
                   ref={startsElRef}
-                  min={date_full(new Date())}
-                  onChange={e => setSDate(e.target.value)}
+                  // min={date_full(new Date())}
+                  onChange={e => setStartDate(e.target.value)}
                   required
                 />
               </Col>
@@ -231,7 +257,7 @@ const EventsPage = () => {
                     type='datetime-local'
                     id='ends'
                     ref={endsElRef}
-                    min={sDate.toString()}
+                    min={startDate.toString()}
                   />
                 </Col>
               </Form.Group>
@@ -243,12 +269,15 @@ const EventsPage = () => {
       {selectedEvent && (
         <ModalComp
           name={selectedEvent.name}
-          canCancel
-          canConfirm
-          canView
-          onCancel={modalCancelHandler}
-          onConfirm={bookEventHandler}
-          confirmText={context.token ? 'Book' : 'Login to Book'}
+          creatorId={selectedEvent.creator._id}
+          eventId={selectedEvent._id}
+          canBook
+          canDelete
+          authUserId={userId}
+          onBack={modalCancelHandler}
+          bookText={token ? 'Book' : 'Login to Book'}
+          onBook={token ? id => BookEvent({ variables: { id } }) : unAuth}
+          onDelete={id => DeleteEvent({ variables: { id } })}
         >
           <h5>Hosted by {selectedEvent.creator.email}</h5>
           <h6 className='text-muted d-flex align-items-center'>
@@ -265,18 +294,44 @@ const EventsPage = () => {
           </div>
         </ModalComp>
       )}
-      {/* Create event */}
-      {context.token && (
-        <div className='mt-5 ml-5'>
-          <button
-            className='btn btn-dark mb-2 d-flex align-items-center justify-content-center'
-            onClick={startCreateEventHandler}
-          >
-            <MdAdd className='mr-2' />
-            <span>Create Event</span>
-          </button>
-        </div>
+      {/* View Booking Modal */}
+      {selectedBooking && (
+        <ModalComp
+          name={selectedBooking.event.name}
+          canCancel
+          authUserId={userId}
+          onBack={modalCancelHandler}
+          onCancel={id => CancelBooking({ variables: { id } })}
+          bookingId={selectedBooking._id}
+        >
+          <h5>Hosted by {selectedBooking.event.creator.email}</h5>
+          <h6 className='text-muted d-flex align-items-center'>
+            <MdAccessTime className='mr-3' />
+            {eventDate(
+              selectedBooking.event.starts,
+              selectedBooking.event.ends
+            )}
+          </h6>
+          <h6 className='text-muted d-flex align-items-center'>
+            <MdLocationOn className='mr-3' />
+            {selectedBooking.event.location}
+          </h6>
+          <div className='bg-light mt-3'>
+            <span className='font-weight-bold'>Details</span>
+            <p className='text-muted'>{selectedBooking.event.description}</p>
+          </div>
+        </ModalComp>
       )}
+      {/* Create event */}
+      <div className='mt-5 ml-5'>
+        <button
+          className='btn btn-dark mb-2 d-flex align-items-center justify-content-center'
+          onClick={token ? startCreateEventHandler : unAuth}
+        >
+          <MdAdd className='mr-2' />
+          <span>{token ? 'Create Event' : 'Login to Create Event'}</span>
+        </button>
+      </div>
       {/* Loading and Display Events */}
       {loadingFetch && (
         <Spinner
@@ -289,8 +344,9 @@ const EventsPage = () => {
         <EventList
           events={events_}
           bookings={bookings_}
-          authUserId={context.userId}
-          onViewDetail={showDetailHandler}
+          authUserId={userId}
+          onViewEvent={showEventDetail}
+          onViewBook={showBookDetail}
         />
       )}
     </>

@@ -34,9 +34,9 @@ module.exports = {
       { userId: user.id, email: user.email },
       process.env.KEY,
       {
-        expiresIn: '1h'
+        expiresIn: '24h'
       }
     );
-    return { userId: user.id, token: token, tokenExpiration: 1 };
+    return { userId: user.id, token: token, tokenExpiration: 24 };
   }
 };

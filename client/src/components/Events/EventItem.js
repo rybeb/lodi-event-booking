@@ -35,14 +35,18 @@ const EventItem = props => (
     </div>
 
     <div className='card-footer bg-white'>
-      {props.userId === props.creatorId ? (
-        <span className='m-0' style={{ fontSize: '0.9rem' }}>
-          You're the owner of this event.
-        </span>
-      ) : (
+      {props.canViewBook && (
         <button
           className='btn btn-dark'
-          onClick={props.onDetail.bind(this, props.eventId)}
+          onClick={props.onBookDetail.bind(this, props.bookId)}
+        >
+          View Details
+        </button>
+      )}
+      {props.canViewEvent && (
+        <button
+          className='btn btn-dark'
+          onClick={props.onEventDetail.bind(this, props.eventId)}
         >
           View Details
         </button>

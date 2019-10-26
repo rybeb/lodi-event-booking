@@ -60,9 +60,9 @@ const EventSlider = props => {
   }, []);
 
   return (
-    <Slider_Containder>
+    <Slider_Containder className='mt-2'>
       <div className='cards-slider'>
-        <div className='slider-btns'>
+        <div className=''>
           <button
             className='slider-btn btn-l'
             onClick={() => handleClick('prev')}
@@ -86,6 +86,9 @@ const EventSlider = props => {
                 </div>
               );
             })}
+            {props.events.length === 0 && (
+              <p>You don't have any events coming up.</p>
+            )}
           </div>
         </div>
       </div>

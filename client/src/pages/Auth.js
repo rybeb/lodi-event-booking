@@ -24,9 +24,7 @@ const AuthPage = () => {
   // const [globalError, setglobalError] = useState(null);
   const context = useContext(AuthContext);
 
-  const [Login, { loading, error, data }] = useMutation(LOGIN, {
-    errorPolicy: 'all'
-  });
+  const [Login, { loading, error, data }] = useMutation(LOGIN);
   const [
     CreateUser,
     { loading: loadingCreateUser, data: dataCreateUser, error: errorCreateUser }
@@ -71,7 +69,7 @@ const AuthPage = () => {
           if (isLogin) {
             Login({
               variables: { email, password }
-            });
+            }).then(() => context.setEmail(email));
           } else {
             CreateUser({
               variables: { email, password }
@@ -90,7 +88,15 @@ const AuthPage = () => {
           handleReset
         }) => (
           <>
-            <Form onSubmit={handleSubmit} className='auth-form'>
+            <Form
+              onSubmit={handleSubmit}
+              className='auth-form'
+              style={
+                isLogin
+                  ? { backgroundColor: '#f8f9fa' }
+                  : { backgroundColor: '#dadcdd' }
+              }
+            >
               <Form.Group className='d-flex justify-content-between align-items-start'>
                 <p>{isLogin ? 'Login' : 'Signup'}</p>
                 <p
@@ -153,6 +159,7 @@ export default AuthPage;
 
 const AuthContainer = styled.div`
   .auth-form {
+    padding: 1rem;
     width: 25rem;
     max-width: 80%;
     margin: 5rem auto;

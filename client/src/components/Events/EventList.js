@@ -7,18 +7,21 @@ import EventSlider from './EventSlider';
 const EventList = props => {
   const context = useContext(AuthContext);
 
-  const myBookings = props.bookings.map(event => {
+  const myBookings = props.bookings.map(booking => {
+    let { event } = booking;
     return (
       <EventItem
         key={event._id}
         eventId={event._id}
+        bookId={booking._id}
         name={event.name}
         location={event.location}
         description={event.description}
         starts={event.starts}
         userId={props.authUserId}
         creatorId={event.creator._id}
-        onDetail={props.onViewDetail}
+        onBookDetail={props.onViewBook}
+        canViewBook
       />
     );
   });
@@ -36,7 +39,8 @@ const EventList = props => {
           starts={event.starts}
           userId={props.authUserId}
           creatorId={event.creator._id}
-          onDetail={props.onViewDetail}
+          onEventDetail={props.onViewEvent}
+          canViewEvent
         />
       );
     });
@@ -54,7 +58,8 @@ const EventList = props => {
           starts={event.starts}
           userId={props.authUserId}
           creatorId={event.creator._id}
-          onDetail={props.onViewDetail}
+          onEventDetail={props.onViewEvent}
+          canViewEvent
         />
       );
     });
@@ -64,10 +69,10 @@ const EventList = props => {
       {context.token && (
         <>
           <EventSlider
-            header='My Events'
+            header='Upcoming Events'
             events={[...myEvents, ...myBookings]}
           />
-          <EventSlider header='Other Events' events={otherEvents} />
+          <EventSlider header='Events You May Like' events={otherEvents} />
         </>
       )}
       {!context.token && <EventSlider header='Events' events={otherEvents} />}

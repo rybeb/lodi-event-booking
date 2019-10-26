@@ -8,7 +8,6 @@ import { ApolloProvider } from '@apollo/react-hooks';
 
 import AuthPage from './pages/Auth';
 import EventsPage from './pages/Events';
-import BookingsPage from './pages/Bookings';
 import MainNavigaton from './components/Navigation/MainNavigation';
 import { AuthContext } from './context/auth-context';
 import './App.css';
@@ -38,8 +37,10 @@ const App = () => {
   const context = useContext(AuthContext);
   const token = localStorage.getItem('lodiToken');
   const userId = localStorage.getItem('lodiUserId');
-  if (token && userId) {
+  const userEmail = localStorage.getItem('lodiUserEmail');
+  if (token && userId && userEmail) {
     context.reAuth(token, userId);
+    context.setEmail(userEmail);
   }
 
   return (
@@ -52,9 +53,6 @@ const App = () => {
             {context.token && <Redirect from='/auth' to='/events' exact />}
             {!context.token && <Route path='/auth' component={AuthPage} />}
             <Route path='/events' component={EventsPage} />
-            {context.token && (
-              <Route path='/bookings' component={BookingsPage} />
-            )}
             {!context.token && <Redirect to='/auth' exact />}
           </Switch>
         </main>

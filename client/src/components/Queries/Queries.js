@@ -46,6 +46,24 @@ export const CREATE_EVENT = gql`
   }
 `;
 
+export const DELETE_EVENT = gql`
+  mutation DeleteEvent($id: ID!) {
+    deleteEvent(eventId: $id) {
+      _id
+      name
+    }
+  }
+`;
+
+export const PAST_EVENT = gql`
+  mutation PastEvent($id: ID!) {
+    pastEvent(eventId: $id) {
+      _id
+      name
+    }
+  }
+`;
+
 export const FETCH_EVENTS = gql`
   query FetchEvents {
     events {

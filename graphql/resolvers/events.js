@@ -50,5 +50,14 @@ module.exports = {
     } catch (err) {
       throw err;
     }
+  },
+  pastEvent: async (args, req) => {
+    try {
+      const event = await Event.findById(args.eventId).populate('event');
+      await Event.deleteOne({ _id: args.eventId });
+      return transformEvent(event);
+    } catch (err) {
+      throw err;
+    }
   }
 };
