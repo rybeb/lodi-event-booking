@@ -45,7 +45,7 @@ const MONGO_CONNECT_STRING = `mongodb+srv://${process.env.MONGO_USER}:${process.
 const PORT = process.env.PORT || 5000;
 
 mongoose
-  .connect(process.env.MONGO_LOCAL, {
+  .connect(MONGO_CONNECT_STRING, {
     useNewUrlParser: true,
     useUnifiedTopology: true
   })

@@ -13,7 +13,7 @@ import { AuthContext } from './context/auth-context';
 import './App.css';
 
 const httpLink = createHttpLink({
-  uri: 'http://localhost:5000/graphql'
+  uri: '/graphql'
 });
 
 const authLink = setContext((_, { headers }) => {
