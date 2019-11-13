@@ -30,14 +30,11 @@ terminal `npm run dev`
 
 ```javascript
 const path = require("path");
+
+app.use(express.static("public"));
+
 app.get("*", (req, res) => {
-  res.sendFile(
-    path.resolve(
-      \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_dirname,
-      "public",
-      "index.html"
-    )
-  );
+  res.sendFile(path.resolve(__dirname, "public", "index.html"));
 });
 ```
 
