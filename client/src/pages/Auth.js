@@ -21,16 +21,14 @@ const schema = Yup.object().shape({
 
 const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
-  // const [globalError, setglobalError] = useState(null);
   const context = useContext(AuthContext);
+  let globalError = '';
 
   const [Login, { loading, error, data }] = useMutation(LOGIN);
   const [
     CreateUser,
     { loading: loadingCreateUser, data: dataCreateUser, error: errorCreateUser }
   ] = useMutation(CREATE_USER);
-
-  let globalError = '';
 
   if (loading || loadingCreateUser) {
     return (
@@ -41,24 +39,15 @@ const AuthPage = () => {
       />
     );
   }
-  if (error) {
-    globalError = 'Email and/or password is incorrect, please try again!';
-  }
-  if (data) {
-    const { token, userId, tokenExpiration } = data.login;
-    context.login(token, userId, tokenExpiration);
-  }
+  if (error) globalError = 'Email and/or password is incorrect!';
 
-  if (errorCreateUser) {
-    globalError = 'User exist already!';
-  }
-  if (dataCreateUser) {
-    globalError = 'User created!';
-  }
+  if (data) context.login(data.login.token, data.login.userId);
 
-  const switchModeHandler = () => {
-    setIsLogin(!isLogin);
-  };
+  if (errorCreateUser) globalError = 'User exist already!';
+
+  if (dataCreateUser) globalError = 'User created!';
+
+  const switchModeHandler = () => setIsLogin(!isLogin);
 
   return (
     <AuthContainer>

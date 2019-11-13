@@ -152,8 +152,8 @@ const EventsPage = () => {
           : new Date(e.starts) < new Date();
       })
       .map(e => {
-        PastEvent({ variables: { id: e._id } });
         console.log(`${e.name} deleted`);
+        return PastEvent({ variables: { id: e._id } });
       });
   };
 
